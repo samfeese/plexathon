@@ -1,0 +1,98 @@
+version: "3.8"
+
+# ============================================================
+# Plexathon - Docker Compose
+# ============================================================
+# Start all services:   docker-compose up -d
+# Stop all services:    docker-compose down
+# View logs:            docker-compose logs -f
+# ============================================================
+
+services:
+
+  # ------------------------------------------------------------
+  # Cloudflare Tunnel — routes external traffic to containers
+  # No open ports, no router config needed.
+  # Requires: cloudflared/config.yml and cloudflared/<tunnel-id>.json
+  # Set up by running: ./scripts/setup-cloudflare-tunnel.sh
+  # ------------------------------------------------------------
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    volumes:
+      - ./cloudflared:/etc/cloudflared
+    environment:
+      - TZ=${TIMEZONE}
+
+  # ------------------------------------------------------------
+  # Plex — movies & TV
+  # Local:    http://localhost:32400/web
+  # Remote:   https://plex.yourdomain.com
+  # ------------------------------------------------------------
+  plex:
+    image: plexinc/pms-docker:latest
+    container_name: plex
+    restart: unless-stopped
+    network_mode: host   # Required for Plex local network discovery
+    environment:
+      - TZ=${TIMEZONE}
+      - PLEX_CLAIM=${PLEX_CLAIM}
+      - PLEX_UID=1000
+      - PLEX_GID=1000
+    volumes:
+      - ./plex/config:/config
+      - ./plex/transcode:/transcode
+      - ${MEDIA_PATH}:/media:ro
+
+  # ------------------------------------------------------------
+  # Audiobookshelf — audiobooks & podcasts
+  # Local:    http://localhost:13378
+  # Remote:   https://audiobooks.yourdomain.com
+  # ------------------------------------------------------------
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: audiobookshelf
+    restart: unless-stopped
+    ports:
+      - "13378:80"
+    environment:
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./audiobookshelf/config:/config
+      - ./audiobookshelf/metadata:/metadata
+      - ${MEDIA_PATH}/audiobooks:/audiobooks:ro
+      - ${MEDIA_PATH}/podcasts:/podcasts:ro
+
+  # ------------------------------------------------------------
+  # FileBrowser — web file manager
+  # Local:    http://localhost:8080
+  # Remote:   https://files.yourdomain.com
+  # Default login: admin / admin  (change this immediately!)
+  # ------------------------------------------------------------
+  filebrowser:
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ${MEDIA_PATH}:/srv
+      - ./filebrowser/database.db:/database.db
+      - ./filebrowser/config.json:/.filebrowser.json
+
+  # ------------------------------------------------------------
+  # Homepage — dashboard
+  # Local:    http://localhost:3000
+  # Remote:   https://home.yourdomain.com
+  # ------------------------------------------------------------
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro

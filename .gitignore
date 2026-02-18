@@ -1,0 +1,25 @@
+# Environment - contains passwords, never commit this
+.env
+
+# Cloudflare tunnel credentials
+cloudflared/*.json
+cloudflared/config.yml
+
+# Service data directories (generated at runtime)
+audiobookshelf/config/*
+!audiobookshelf/config/.gitkeep
+audiobookshelf/metadata/*
+!audiobookshelf/metadata/.gitkeep
+plex/config/*
+!plex/config/.gitkeep
+plex/transcode/*
+!plex/transcode/.gitkeep
+filebrowser/database.db
+homepage/logs/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Logs
+*.log
