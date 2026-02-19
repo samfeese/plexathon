@@ -1,0 +1,15 @@
+- Media:
+    - Jellyfin:
+        href: http://localhost:8096
+        description: Movies & TV
+        icon: jellyfin.png
+    - Audiobookshelf:
+        href: http://localhost:13378
+        description: Audiobooks & Podcasts
+        icon: audiobookshelf.png
+
+- Tools:
+    - FileBrowser:
+        href: http://localhost:8080
+        description: Manage Files
+        icon: filebrowser.png
