@@ -1,6 +1,6 @@
 # Plexathon 🎬
 
-Your personal media server — Plex, audiobooks, and more, running on your Mac mini.
+Your personal media server — Plex, audiobooks, torrents, and more, running on your Mac mini.
 
 ---
 
@@ -12,12 +12,12 @@ Turns your Mac mini into a home media server that you can access from anywhere:
 |---|---|
 | **Plex** | Watch movies and TV shows |
 | **Audiobookshelf** | Listen to audiobooks and podcasts |
+| **qBittorrent** | Download torrents — all traffic routed through ProtonVPN |
 | **FileBrowser** | Browse and manage your media files from a browser |
 | **Homepage** | A simple dashboard with links to everything |
-| **qBittorrent** | Torrent client — all traffic routed through ProtonVPN |
 | **Cloudflare Tunnel** | Secure remote access — no router config needed |
 
-Your media files live on the Windows laptop and are shared over your home network. The Mac mini reads them and serves them up through Plex.
+Your media files live on an external drive plugged into the Mac mini.
 
 ---
 
@@ -26,9 +26,10 @@ Your media files live on the Windows laptop and are shared over your home networ
 You'll need:
 
 - [ ] **Mac mini** plugged in and on (this is where everything runs)
-- [ ] **Windows laptop** on the same WiFi/network with a shared folder set up
+- [ ] **External hard drive** plugged into the Mac mini (for storing all your media)
 - [ ] **Docker Desktop** installed on the Mac mini → [Download here](https://www.docker.com/products/docker-desktop/)
 - [ ] A **free Plex account** → [Sign up here](https://www.plex.tv/sign-up/)
+- [ ] A **ProtonVPN account** (for safe torrenting) → [Sign up here](https://proton.me/vpn)
 - [ ] About **30 minutes**
 
 ---
@@ -52,11 +53,23 @@ open -e .env
 ```
 
 This opens a text file. Fill in:
-- Your Windows laptop's IP address
-- Your Windows username and password
-- Your Plex claim token (get one at [plex.tv/claim](https://www.plex.tv/claim/) — it expires in 4 minutes so do this right before running setup)
+- `MEDIA_PATH` — the path to your external drive (plug it in, find its name in Finder under "Locations", it'll be `/Volumes/<name>`)
+- `PLEX_CLAIM` — your Plex claim token from [plex.tv/claim](https://www.plex.tv/claim/) — get it right before running setup, it expires in 4 minutes
+- `PROTONVPN_PRIVATE_KEY` — your WireGuard key from ProtonVPN (see below)
 
-### Step 3 — Run setup
+**Getting your ProtonVPN WireGuard key:**
+1. Log in at proton.me → VPN → Downloads → WireGuard configuration
+2. Click Create, choose any server
+3. Copy the `PrivateKey` value from the `[Interface]` section
+
+### Step 3 — Allow Docker to access your drive
+
+1. Open **Docker Desktop**
+2. Go to **Settings → Resources → File Sharing**
+3. Add the path to your external drive (e.g. `/Volumes/MediaDrive`)
+4. Click **Apply & Restart**
+
+### Step 4 — Run setup
 
 ```bash
 ./setup.sh
@@ -76,6 +89,7 @@ Everything runs automatically in the background. You don't need to do anything.
 |---|---|
 | Plex | http://localhost:32400/web |
 | Audiobookshelf | http://localhost:13378 |
+| qBittorrent | http://localhost:8090 |
 | FileBrowser | http://localhost:8080 |
 | Dashboard | http://localhost:3000 |
 
@@ -85,9 +99,20 @@ Everything runs automatically in the background. You don't need to do anything.
 |---|---|
 | Plex | https://plex.yourdomain.com |
 | Audiobookshelf | https://audiobooks.yourdomain.com |
+| qBittorrent | https://torrents.yourdomain.com |
 | FileBrowser | https://files.yourdomain.com |
 | Dashboard | https://home.yourdomain.com |
-| qBittorrent | https://torrents.yourdomain.com |
+
+---
+
+## Downloading & Adding Media
+
+1. Open qBittorrent at `localhost:8090`
+2. Add a torrent (paste a magnet link or upload a .torrent file)
+3. Downloads go to the `downloads/` folder on your drive
+4. Move completed files into `movies/` or `tv/` and Plex will pick them up on the next scan
+
+**Tip:** Install the [Torrent Control](https://github.com/Douman/torrent-control) browser extension to send magnet links directly to qBittorrent with one click.
 
 ---
 
@@ -114,15 +139,20 @@ docker-compose pull && docker-compose up -d
 
 ## If Something's Not Working
 
+**qBittorrent won't start / VPN not connecting:**
+- Check logs: `docker-compose logs -f gluetun`
+- Make sure `PROTONVPN_PRIVATE_KEY` is set correctly in `.env`
+- Try a different country in `PROTONVPN_COUNTRY`
+
+**Plex isn't showing my media:**
+1. Make sure the external drive is plugged in
+2. Check it's showing up in Finder under "Locations"
+3. Verify Docker has file sharing access: Docker Desktop → Settings → Resources → File Sharing
+
 **Cloudflare tunnel not connecting:**
 - Check it's running: `docker-compose logs -f cloudflared`
 - Make sure `cloudflared/config.yml` exists (run `./scripts/setup-cloudflare-tunnel.sh` if not)
 - Verify DNS records in your Cloudflare dashboard have Proxy ON (orange cloud)
-
-**Plex isn't showing my media:**
-1. Make sure the Windows laptop is on and not sleeping
-2. Check the shared folder is still shared in Windows settings
-3. Run `./scripts/mount-network-share.sh mount` to remount
 
 **Can't access from outside home:**
 - Make sure the Cloudflare tunnel is running: `docker-compose logs -f cloudflared`
@@ -152,10 +182,10 @@ The script walks you through everything — it creates the tunnel, generates the
 
 ## Your Media Folder Layout
 
-Put your files on the Windows laptop like this:
+Files on the external drive:
 
 ```
-Media/                        ← the shared folder
+MediaDrive/
 ├── movies/
 │   └── The Matrix (1999)/
 │       └── The Matrix (1999).mkv
@@ -168,5 +198,6 @@ Media/                        ← the shared folder
 │       └── Book Title/
 │           ├── 01 - Chapter.mp3
 │           └── cover.jpg
-└── podcasts/
+├── podcasts/
+└── downloads/        ← torrents land here, move to above folders when done
 ```

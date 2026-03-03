@@ -25,8 +25,8 @@ Docker Containers:
 ## Hardware Setup
 
 - **Mac mini**: Docker host running all services
-- **Windows laptop**: SMB file share hosting media files
-- **Network**: Both devices on same local network
+- **External drive**: Plugged directly into the Mac mini, holds all media and downloads
+- **Network**: Mac mini connected to router (wired preferred)
 
 ## Services
 
@@ -69,23 +69,21 @@ Docker Containers:
    - Downloads land in `${MEDIA_PATH}/downloads`
    - Port published on gluetun container, not directly on qbittorrent
 
-## Network Share Strategy
+## Media Storage
 
-### Why SMB Mount vs Running on Windows
+All media lives on an external drive plugged directly into the Mac mini, mounted at `/Volumes/<drive-name>` (set via `MEDIA_PATH` in `.env`).
 
-The Windows laptop serves media files via SMB share, which the Mac mini mounts and accesses. We could run Docker containers directly on Windows, but this approach has advantages:
+**Drive layout:**
+```
+/Volumes/MediaDrive/
+├── movies/       ← Plex movies library
+├── tv/           ← Plex TV library
+├── audiobooks/   ← Audiobookshelf library
+├── podcasts/     ← Audiobookshelf podcasts
+└── downloads/    ← qBittorrent download destination
+```
 
-**Advantages of Mac mini as Docker host:**
-- Always-on server (Mac mini is better suited for 24/7 operation)
-- Lower power consumption than laptop
-- Dedicated hardware for services
-- Windows laptop can sleep/restart without affecting services
-
-**SMB Mount approach:**
-- Mac mini mounts Windows share: `/Volumes/Media`
-- Docker containers access mounted path
-- Windows laptop just needs to share folder, no Docker setup required
-- Easier for non-technical person to manage (just keep share enabled)
+**Docker Desktop File Sharing:** macOS requires explicitly allowing Docker to access volumes outside the home directory. In Docker Desktop → Settings → Resources → File Sharing, add the drive path (e.g. `/Volumes/MediaDrive`).
 
 ## Remote Access Strategy
 
@@ -140,8 +138,10 @@ homelab-stack/
 ├── homepage/
 │   ├── services.yaml             # Dashboard service definitions
 │   └── settings.yaml             # Dashboard settings
+├── gluetun/                      # Gluetun state (created at runtime)
+├── qbittorrent/
+│   └── config/                   # qBittorrent configuration
 └── scripts/
-    ├── mount-network-share.sh    # SMB mount automation
     └── setup-cloudflare-tunnel.sh # Cloudflare tunnel setup wizard
 ```
 
@@ -152,13 +152,7 @@ homelab-stack/
 TIMEZONE=America/New_York
 
 # Media storage path (where SMB share is mounted)
-MEDIA_PATH=/Volumes/Media
-
-# Network share settings (Windows laptop)
-SMB_SERVER=192.168.1.100          # Windows laptop IP
-SMB_SHARE=Media                   # Share name
-SMB_USERNAME=username             # Windows user
-SMB_PASSWORD=password             # Windows password
+MEDIA_PATH=/Volumes/MediaDrive     # Path to external drive
 
 # Domain for external access
 DOMAIN=yourdomain.com
@@ -178,12 +172,14 @@ cd homelab
 ```
 
 **Setup script does:**
-- Checks for Docker Desktop
+- Checks for Docker Desktop is installed and running
 - Creates `.env` from template (prompts for editing)
-- Mounts SMB share from Windows laptop
-- Creates all necessary directories and service configs
+- Verifies external drive is accessible at `MEDIA_PATH`
+- Checks Docker has file sharing permission for the drive path
+- Creates media subdirectories on the drive (`movies/`, `tv/`, `downloads/`, etc.)
+- Generates service configs (FileBrowser, Homepage)
 - Starts Docker containers (skips cloudflared if not yet configured)
-- Displays access URLs
+- Displays access URLs and first-time steps
 
 ### 2. Configure Services
 
@@ -237,136 +233,39 @@ ingress:
 
 No reverse proxy needed — Cloudflare handles SSL and routing directly.
 
-## Network Share Auto-Mounting
-
-**Challenge:** Docker containers need the SMB share mounted before they start.
-
-**Solution:** LaunchAgent runs `mount-network-share.sh` on boot.
-
-**LaunchAgent location:**
-`~/Library/LaunchAgents/com.homelab.mount.plist`
-
-**Mount script:**
-- Checks if share is already mounted
-- Mounts using credentials from `.env`
-- Creates media subdirectories if missing
-
-**Manual remount:**
-```bash
-./scripts/mount-network-share.sh mount
-```
-
 ## Media Directory Structure
 
-Expected layout on Windows share:
+Expected layout on the external drive:
 
 ```
-/Volumes/Media/  (or wherever SMB share is mounted)
-├── audiobooks/
-│   ├── Author Name/
-│   │   └── Book Title/
-│   │       ├── chapter01.mp3
-│   │       ├── chapter02.mp3
-│   │       └── cover.jpg
-├── podcasts/
-│   └── Podcast Name/
-│       └── episodes/
+/Volumes/MediaDrive/
 ├── movies/
 │   └── Movie Name (Year)/
 │       └── Movie Name (Year).mkv
-└── tv/
-    └── Show Name/
-        └── Season 01/
-            └── Show - S01E01.mkv
+├── tv/
+│   └── Show Name/
+│       └── Season 01/
+│           └── Show Name - S01E01.mkv
+├── audiobooks/
+│   └── Author Name/
+│       └── Book Title/
+│           ├── 01 - Chapter.mp3
+│           └── cover.jpg
+├── podcasts/
+│   └── Podcast Name/
+│       └── episodes/
+└── downloads/        ← qBittorrent drops files here
 ```
 
-## Platform Differences: macOS vs Linux
-
-This repo was originally designed for macOS (Mac mini). For Linux (Ubuntu/WSL), adjust:
-
-### Path Differences
-
-**macOS:**
-- User directory: `/Users/username`
-- Homebrew: `/usr/local/bin` or `/opt/homebrew/bin` (Apple Silicon)
-- LaunchAgents: `~/Library/LaunchAgents/`
-
-**Linux:**
-- User directory: `/home/username`
-- Package manager: `apt` instead of `brew`
-- Systemd services: `/etc/systemd/system/` instead of LaunchAgents
-
-### SMB Mounting
-
-**macOS:**
-```bash
-mount -t smbfs "//user:pass@server/share" /Volumes/ShareName
-```
-
-**Linux:**
-```bash
-# Install cifs-utils first
-sudo apt install cifs-utils
-
-# Mount
-sudo mount -t cifs //server/share /mnt/ShareName -o username=user,password=pass
-```
-
-**Persistent mount (Linux /etc/fstab):**
-```
-//server/share /mnt/ShareName cifs credentials=/home/user/.smbcredentials,uid=1000,gid=1000 0 0
-```
-
-Where `.smbcredentials`:
-```
-username=user
-password=pass
-```
-
-### Auto-start Services
-
-**macOS:** LaunchAgents (XML plist files)
-**Linux:** Systemd service units
-
-**Example systemd service for mount:**
-```ini
-# /etc/systemd/system/mount-media.service
-[Unit]
-Description=Mount SMB Media Share
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=oneshot
-ExecStart=/home/user/homelab/scripts/mount-network-share.sh mount
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable: `sudo systemctl enable mount-media.service`
-
-### Docker Installation
-
-**macOS:** Docker Desktop (GUI application)
-**Linux:** Docker Engine (daemon)
-
-```bash
-# Linux install
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-```
+Completed downloads from qBittorrent land in `downloads/`. Move or copy them into `movies/` or `tv/` and trigger a Plex library scan.
 
 ## Security Considerations
 
 ### Credentials Storage
 
-- `.env` file contains plaintext passwords
+- `.env` file contains plaintext passwords and VPN keys
 - **Never commit `.env` to git** (in `.gitignore`)
-- SMB credentials stored in `mount-network-share.sh` and LaunchAgent
-- Cloudflare tunnel credentials in `cloudflared/<tunnel-id>.json`
+- Cloudflare tunnel credentials in `cloudflared/<tunnel-id>.json` (also gitignored)
 
 ### Network Security
 
@@ -388,20 +287,15 @@ sudo usermod -aG docker $USER
 
 ## Troubleshooting
 
-### SMB share not mounting
+### External drive not accessible
 
 ```bash
-# Check if share is accessible
-smbutil view //SMB_SERVER
+# Check if drive is mounted
+ls /Volumes/
 
-# Try manual mount
-mount -t smbfs "//user:pass@server/share" /Volumes/ShareName
-
-# Check mount status
-mount | grep ShareName
-
-# Remount via script
-./scripts/mount-network-share.sh mount
+# Check Docker has file sharing permission
+# Docker Desktop → Settings → Resources → File Sharing
+# Add the drive path if missing, click Apply & Restart
 ```
 
 ### Container won't start
@@ -493,9 +387,8 @@ docker-compose up -d --force-recreate --build plex
 
 Potential additions to the stack:
 
-- **Sonarr/Radarr**: Automated TV/movie downloading and management
+- **Sonarr/Radarr**: Automated TV/movie downloading and management (pairs with qBittorrent)
 - **Prowlarr**: Indexer management for Sonarr/Radarr
-- **Transmission/qBittorrent**: Torrent client
 - **Tautulli**: Plex monitoring and statistics
 - **Organizr**: Unified dashboard (alternative to Homepage)
 - **Duplicati**: Automated backups
