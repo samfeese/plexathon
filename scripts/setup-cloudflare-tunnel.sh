@@ -122,9 +122,8 @@ tunnel: ${TUNNEL_ID}
 credentials-file: /etc/cloudflared/${TUNNEL_ID}.json
 
 ingress:
-  - hostname: plex.${DOMAIN}
-    service: http://localhost:32400
-    # Plex uses network_mode: host, so reached via localhost
+  - hostname: jellyfin.${DOMAIN}
+    service: http://jellyfin:8096
 
   - hostname: audiobooks.${DOMAIN}
     service: http://audiobookshelf:80
@@ -157,7 +156,7 @@ echo "  Add these 4 records (copy/paste the Target exactly):"
 echo ""
 printf "  %-14s %-8s %-52s %-8s\n" "Name" "Type" "Target" "Proxy"
 printf "  %-14s %-8s %-52s %-8s\n" "----" "----" "------" "-----"
-printf "  %-14s %-8s %-52s %-8s\n" "plex"        "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
+printf "  %-14s %-8s %-52s %-8s\n" "jellyfin"    "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
 printf "  %-14s %-8s %-52s %-8s\n" "audiobooks"  "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
 printf "  %-14s %-8s %-52s %-8s\n" "files"       "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
 printf "  %-14s %-8s %-52s %-8s\n" "home"        "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
@@ -193,7 +192,7 @@ echo -e "${GREEN}${BOLD}Remote access setup complete!${RESET}"
 echo ""
 echo "Your services are now available from anywhere:"
 echo ""
-echo -e "  ${BOLD}Plex${RESET}             https://plex.${DOMAIN}"
+echo -e "  ${BOLD}Jellyfin${RESET}         https://jellyfin.${DOMAIN}"
 echo -e "  ${BOLD}Audiobookshelf${RESET}   https://audiobooks.${DOMAIN}"
 echo -e "  ${BOLD}FileBrowser${RESET}      https://files.${DOMAIN}"
 echo -e "  ${BOLD}Dashboard${RESET}        https://home.${DOMAIN}"

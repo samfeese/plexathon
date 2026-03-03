@@ -1,3 +1,5 @@
+version: "3.8"
+
 # ============================================================
 # Plexathon - Docker Compose
 # ============================================================
@@ -28,7 +30,6 @@ services:
   # Jellyfin — movies & TV
   # Local:    http://localhost:8096
   # Remote:   https://jellyfin.yourdomain.com
-  # No account required — fully self-hosted
   # ------------------------------------------------------------
   jellyfin:
     image: jellyfin/jellyfin:latest
@@ -41,7 +42,7 @@ services:
     volumes:
       - ./jellyfin/config:/config
       - ./jellyfin/cache:/cache
-      - ./media:/media:ro
+      - ${MEDIA_PATH}:/media:ro
 
   # ------------------------------------------------------------
   # Audiobookshelf — audiobooks & podcasts
@@ -49,7 +50,7 @@ services:
   # Remote:   https://audiobooks.yourdomain.com
   # ------------------------------------------------------------
   audiobookshelf:
-    image: advplyr/audiobookshelf:latest
+    image: ghcr.io/advplyr/audiobookshelf:latest
     container_name: audiobookshelf
     restart: unless-stopped
     ports:
@@ -59,10 +60,8 @@ services:
     volumes:
       - ./audiobookshelf/config:/config
       - ./audiobookshelf/metadata:/metadata
-      - ./media/audiobooks:/audiobooks:ro
-      - ./media/podcasts:/podcasts:ro
-      # - ${MEDIA_PATH}/audiobooks:/audiobooks:ro   # uncomment when SMB share is connected
-      # - ${MEDIA_PATH}/podcasts:/podcasts:ro       # uncomment when SMB share is connected
+      - ${MEDIA_PATH}/audiobooks:/audiobooks:ro
+      - ${MEDIA_PATH}/podcasts:/podcasts:ro
 
   # ------------------------------------------------------------
   # FileBrowser — web file manager
@@ -77,8 +76,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./media:/srv
-      # - ${MEDIA_PATH}:/srv   # uncomment when SMB share is connected
+      - ${MEDIA_PATH}:/srv
       - ./filebrowser/database.db:/database.db
       - ./filebrowser/config.json:/.filebrowser.json
 

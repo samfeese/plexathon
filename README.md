@@ -1,6 +1,6 @@
 # Plexathon 🎬
 
-Your personal media server — Plex, audiobooks, torrents, and more, running on your Mac mini.
+Your personal media server — Jellyfin, audiobooks, torrents, and more, running on your Mac mini.
 
 ---
 
@@ -10,7 +10,7 @@ Turns your Mac mini into a home media server that you can access from anywhere:
 
 | Service | What It's For |
 |---|---|
-| **Plex** | Watch movies and TV shows |
+| **Jellyfin** | Watch movies and TV shows |
 | **Audiobookshelf** | Listen to audiobooks and podcasts |
 | **qBittorrent** | Download torrents — all traffic routed through ProtonVPN |
 | **FileBrowser** | Browse and manage your media files from a browser |
@@ -28,7 +28,6 @@ You'll need:
 - [ ] **Mac mini** plugged in and on (this is where everything runs)
 - [ ] **External hard drive** plugged into the Mac mini (for storing all your media)
 - [ ] **Docker Desktop** installed on the Mac mini → [Download here](https://www.docker.com/products/docker-desktop/)
-- [ ] A **free Plex account** → [Sign up here](https://www.plex.tv/sign-up/)
 - [ ] A **ProtonVPN account** (for safe torrenting) → [Sign up here](https://proton.me/vpn)
 - [ ] About **30 minutes**
 
@@ -54,7 +53,6 @@ open -e .env
 
 This opens a text file. Fill in:
 - `MEDIA_PATH` — the path to your external drive (plug it in, find its name in Finder under "Locations", it'll be `/Volumes/<name>`)
-- `PLEX_CLAIM` — your Plex claim token from [plex.tv/claim](https://www.plex.tv/claim/) — get it right before running setup, it expires in 4 minutes
 - `PROTONVPN_PRIVATE_KEY` — your WireGuard key from ProtonVPN (see below)
 
 **Getting your ProtonVPN WireGuard key:**
@@ -87,7 +85,7 @@ Everything runs automatically in the background. You don't need to do anything.
 
 | Service | Address |
 |---|---|
-| Plex | http://localhost:32400/web |
+| Jellyfin | http://localhost:8096 |
 | Audiobookshelf | http://localhost:13378 |
 | qBittorrent | http://localhost:8090 |
 | FileBrowser | http://localhost:8080 |
@@ -97,7 +95,7 @@ Everything runs automatically in the background. You don't need to do anything.
 
 | Service | Address |
 |---|---|
-| Plex | https://plex.yourdomain.com |
+| Jellyfin | https://jellyfin.yourdomain.com |
 | Audiobookshelf | https://audiobooks.yourdomain.com |
 | qBittorrent | https://torrents.yourdomain.com |
 | FileBrowser | https://files.yourdomain.com |
@@ -110,7 +108,7 @@ Everything runs automatically in the background. You don't need to do anything.
 1. Open qBittorrent at `localhost:8090`
 2. Add a torrent (paste a magnet link or upload a .torrent file)
 3. Downloads go to the `downloads/` folder on your drive
-4. Move completed files into `movies/` or `tv/` and Plex will pick them up on the next scan
+4. Move completed files into `movies/` or `tv/` and Jellyfin will pick them up on the next scan
 
 **Tip:** Install the [Torrent Control](https://github.com/Douman/torrent-control) browser extension to send magnet links directly to qBittorrent with one click.
 
@@ -125,11 +123,11 @@ docker-compose ps
 # Restart everything
 docker-compose restart
 
-# Restart just Plex
-docker-compose restart plex
+# Restart just Jellyfin
+docker-compose restart jellyfin
 
 # View logs if something looks wrong
-docker-compose logs -f plex
+docker-compose logs -f jellyfin
 
 # Update to latest versions
 docker-compose pull && docker-compose up -d
@@ -144,7 +142,7 @@ docker-compose pull && docker-compose up -d
 - Make sure `PROTONVPN_PRIVATE_KEY` is set correctly in `.env`
 - Try a different country in `PROTONVPN_COUNTRY`
 
-**Plex isn't showing my media:**
+**Jellyfin isn't showing my media:**
 1. Make sure the external drive is plugged in
 2. Check it's showing up in Finder under "Locations"
 3. Verify Docker has file sharing access: Docker Desktop → Settings → Resources → File Sharing

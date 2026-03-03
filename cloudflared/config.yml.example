@@ -11,9 +11,8 @@ tunnel: YOUR-TUNNEL-ID-HERE
 credentials-file: /etc/cloudflared/YOUR-TUNNEL-ID-HERE.json
 
 ingress:
-  - hostname: plex.yourdomain.com
-    service: http://localhost:32400
-    # Plex uses network_mode: host, so we reach it via localhost
+  - hostname: jellyfin.yourdomain.com
+    service: http://jellyfin:8096
 
   - hostname: audiobooks.yourdomain.com
     service: http://audiobookshelf:80

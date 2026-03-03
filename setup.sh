@@ -81,7 +81,6 @@ if [[ ! -f .env ]]; then
   echo "Opening .env in TextEdit. Fill in:"
   echo "  • MEDIA_PATH — the path to your external drive (e.g. /Volumes/MediaDrive)"
   echo "  • DOMAIN — your domain name (or leave as-is for local-only access)"
-  echo "  • PLEX_CLAIM — your Plex claim token from https://www.plex.tv/claim/"
   echo "  • PROTONVPN_PRIVATE_KEY — your WireGuard private key from ProtonVPN"
   echo ""
   echo "Save the file and come back here when done."
@@ -92,7 +91,7 @@ fi
 
 set -a; source .env; set +a
 
-REQUIRED_VARS=(TIMEZONE MEDIA_PATH PLEX_CLAIM)
+REQUIRED_VARS=(TIMEZONE MEDIA_PATH)
 MISSING=()
 for var in "${REQUIRED_VARS[@]}"; do
   val="${!var:-}"
@@ -113,7 +112,7 @@ fi
 ok "External drive found at $MEDIA_PATH"
 
 # Check Docker has access to the drive (macOS requires explicit file sharing permission)
-if ! docker run --rm -v "$MEDIA_PATH:/test" alpine ls /test &>/dev/null 2>&1; then
+if ! $RUNTIME run --rm -v "$MEDIA_PATH:/test" alpine ls /test &>/dev/null 2>&1; then
   warn "Docker can't access $MEDIA_PATH"
   echo ""
   echo "  You need to allow Docker to access your external drive:"
@@ -123,7 +122,7 @@ if ! docker run --rm -v "$MEDIA_PATH:/test" alpine ls /test &>/dev/null 2>&1; th
   echo "  4. Click Apply & Restart"
   echo ""
   read -p "  Press Enter once you've done this and Docker has restarted..."
-  if ! docker run --rm -v "$MEDIA_PATH:/test" alpine ls /test &>/dev/null 2>&1; then
+  if ! $RUNTIME run --rm -v "$MEDIA_PATH:/test" alpine ls /test &>/dev/null 2>&1; then
     fail "Docker still can't access $MEDIA_PATH. Check the File Sharing setting above."
   fi
 fi
@@ -210,9 +209,9 @@ if [[ ! -f ./cloudflared/config.yml ]]; then
   echo "  ./scripts/setup-cloudflare-tunnel.sh"
   echo ""
   info "Pulling latest container images..."
-  docker-compose pull plex audiobookshelf filebrowser homepage gluetun qbittorrent
+  $COMPOSE_CMD pull jellyfin audiobookshelf filebrowser homepage gluetun qbittorrent
   info "Starting services..."
-  docker-compose up -d plex audiobookshelf filebrowser homepage gluetun qbittorrent
+  $COMPOSE_CMD up -d jellyfin audiobookshelf filebrowser homepage gluetun qbittorrent
 else
   info "Pulling latest container images..."
   $COMPOSE_CMD pull
@@ -250,12 +249,12 @@ echo -e "  ${BOLD}FileBrowser${RESET}      http://localhost:8080"
 echo -e "  ${BOLD}Dashboard${RESET}        http://localhost:3000"
 echo ""
 echo -e "${YELLOW}First-time steps:${RESET}"
-echo "  1. Open Plex and sign in with your Plex account"
-echo "  2. Add media libraries in Plex:"
+echo "  1. Open Jellyfin and create your admin account"
+echo "  2. Add media libraries in Jellyfin:"
 echo "     Movies → /media/movies"
 echo "     TV     → /media/tv"
 echo "  3. Check qBittorrent logs for its temporary password:"
-echo "     docker-compose logs qbittorrent | grep -i password"
+echo "     $COMPOSE_CMD logs qbittorrent | grep -i password"
 echo "  4. Change the FileBrowser password (default: admin / admin)"
 echo ""
 if [[ ! -f ./cloudflared/config.yml ]]; then

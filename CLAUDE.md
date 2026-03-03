@@ -14,7 +14,7 @@ Cloudflare (SSL termination + routing by hostname)
 cloudflared container (tunnel, ingress rules in config.yml)
   ↓
 Docker Containers:
-  - Plex (movies & TV)          ← plex.yourdomain.com
+  - Jellyfin (movies & TV)      ← jellyfin.yourdomain.com
   - Audiobookshelf (audiobooks) ← audiobooks.yourdomain.com
   - FileBrowser (file manager)  ← files.yourdomain.com
   - Homepage (dashboard)        ← home.yourdomain.com
@@ -41,12 +41,11 @@ Docker Containers:
 2. **Audiobookshelf** (port 13378)
    - Purpose-built audiobook and podcast server
    - Progress tracking, mobile apps, metadata fetching
-   - Superior to Plex for audiobook management
 
-3. **Plex** (port 32400)
-   - Industry-standard media server for movies/TV
+3. **Jellyfin** (port 8096)
+   - Open-source media server for movies/TV
+   - No account required, no licensing fees
    - Rich client apps across all platforms
-   - Hardware transcoding support (Plex Pass required)
 
 4. **FileBrowser** (port 8080)
    - Web-based file manager
@@ -76,8 +75,8 @@ All media lives on an external drive plugged directly into the Mac mini, mounted
 **Drive layout:**
 ```
 /Volumes/MediaDrive/
-├── movies/       ← Plex movies library
-├── tv/           ← Plex TV library
+├── movies/       ← Jellyfin movies library
+├── tv/           ← Jellyfin TV library
 ├── audiobooks/   ← Audiobookshelf library
 ├── podcasts/     ← Audiobookshelf podcasts
 └── downloads/    ← qBittorrent download destination
@@ -129,9 +128,9 @@ homelab-stack/
 ├── audiobookshelf/
 │   ├── config/                   # App configuration
 │   └── metadata/                 # Audiobook metadata cache
-├── plex/
-│   ├── config/                   # Plex configuration and metadata
-│   └── transcode/                # Transcoding temp files
+├── jellyfin/
+│   ├── config/                   # Jellyfin configuration and metadata
+│   └── cache/                    # Jellyfin cache files
 ├── filebrowser/
 │   ├── database.db               # FileBrowser database
 │   └── config.json               # FileBrowser settings
@@ -188,8 +187,8 @@ cd homelab
 - Add library pointing to `/audiobooks`
 - Scan for audiobooks
 
-**Plex (http://localhost:32400/web):**
-- Sign in with Plex account (required)
+**Jellyfin (http://localhost:8096):**
+- Create admin account (no external account needed)
 - Run setup wizard
 - Add libraries:
   - Movies: `/media/movies`
@@ -217,8 +216,8 @@ cd homelab
 **Ingress config pattern** (`cloudflared/config.yml`):
 ```yaml
 ingress:
-  - hostname: plex.yourdomain.com
-    service: http://localhost:32400      # host network (Plex)
+  - hostname: jellyfin.yourdomain.com
+    service: http://jellyfin:8096
   - hostname: audiobooks.yourdomain.com
     service: http://audiobookshelf:80   # container name routing
   - hostname: files.yourdomain.com
@@ -257,7 +256,7 @@ Expected layout on the external drive:
 └── downloads/        ← qBittorrent drops files here
 ```
 
-Completed downloads from qBittorrent land in `downloads/`. Move or copy them into `movies/` or `tv/` and trigger a Plex library scan.
+Completed downloads from qBittorrent land in `downloads/`. Move or copy them into `movies/` or `tv/` and trigger a Jellyfin library scan.
 
 ## Security Considerations
 
@@ -280,7 +279,7 @@ Completed downloads from qBittorrent land in `downloads/`. Move or copy them int
 
 **Best practices:**
 - Use strong passwords for all services
-- Enable 2FA where available (Audiobookshelf, Plex support this)
+- Enable 2FA where available (Audiobookshelf, Jellyfin support this)
 - Regularly update containers: `docker-compose pull && docker-compose up -d`
 - Monitor cloudflared logs periodically
 - Use Cloudflare's WAF rules if needed (Cloudflare dashboard)
@@ -334,22 +333,16 @@ docker-compose restart cloudflared
 
 1. Verify tunnel is running: `docker ps | grep cloudflared`
 2. Check cloudflared logs: `docker-compose logs -f cloudflared`
-3. Check DNS propagation: `nslookup plex.yourdomain.com` (should resolve to Cloudflare IPs)
+3. Check DNS propagation: `nslookup jellyfin.yourdomain.com` (should resolve to Cloudflare IPs)
 4. Verify `cloudflared/config.yml` has the correct hostname and service entries
 5. Confirm DNS records in Cloudflare dashboard have Proxy ON (orange cloud)
 
 ### Performance issues
 
-**Transcoding lag (Plex):**
-- Enable hardware transcoding in Plex settings (requires Plex Pass)
+**Transcoding lag (Jellyfin):**
+- Enable hardware transcoding in Jellyfin settings (Admin → Playback → Transcoding)
 - Reduce transcoding quality or allow direct play
 - Pre-transcode large files
-
-**Network share slow:**
-- Check Windows laptop isn't sleeping
-- Verify SMB version (SMB3 is faster than SMB1)
-- Consider wired connection instead of WiFi
-- Monitor network bandwidth
 
 ## Management Commands
 
@@ -367,7 +360,7 @@ docker-compose logs -f audiobookshelf
 docker-compose restart
 
 # Restart specific service
-docker-compose restart plex
+docker-compose restart jellyfin
 
 # Stop all services
 docker-compose down
@@ -380,7 +373,7 @@ docker-compose pull
 docker-compose up -d
 
 # Rebuild specific service
-docker-compose up -d --force-recreate --build plex
+docker-compose up -d --force-recreate --build jellyfin
 ```
 
 ## Future Enhancements
@@ -389,7 +382,7 @@ Potential additions to the stack:
 
 - **Sonarr/Radarr**: Automated TV/movie downloading and management (pairs with qBittorrent)
 - **Prowlarr**: Indexer management for Sonarr/Radarr
-- **Tautulli**: Plex monitoring and statistics
+- **Jellyseerr**: Media request management for Jellyfin
 - **Organizr**: Unified dashboard (alternative to Homepage)
 - **Duplicati**: Automated backups
 - **Watchtower**: Automatic container updates

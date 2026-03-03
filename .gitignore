@@ -10,10 +10,10 @@ audiobookshelf/config/*
 !audiobookshelf/config/.gitkeep
 audiobookshelf/metadata/*
 !audiobookshelf/metadata/.gitkeep
-plex/config/*
-!plex/config/.gitkeep
-plex/transcode/*
-!plex/transcode/.gitkeep
+jellyfin/config/*
+!jellyfin/config/.gitkeep
+jellyfin/cache/*
+!jellyfin/cache/.gitkeep
 filebrowser/database.db
 homepage/logs/
 
