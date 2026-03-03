@@ -95,4 +95,58 @@ services:
       - "3000:3000"
     volumes:
       - ./homepage:/app/config
-      - ${DOCKER_SOCK:-/var/run/docker.sock}:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # ------------------------------------------------------------
+  # Gluetun — ProtonVPN client with kill switch
+  # All torrent traffic is routed through this container.
+  # If the VPN drops, torrent traffic stops (no leak).
+  #
+  # Setup: get a WireGuard private key from ProtonVPN:
+  #   proton.me → VPN → Downloads → WireGuard → Generate
+  #   Copy the "Private key" value into .env as PROTONVPN_PRIVATE_KEY
+  # ------------------------------------------------------------
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "8090:8090"   # qBittorrent web UI (published here, not on qbittorrent)
+      - "6881:6881"   # qBittorrent torrent port (TCP)
+      - "6881:6881/udp"
+    environment:
+      - TZ=${TIMEZONE}
+      - VPN_SERVICE_PROVIDER=protonvpn
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${PROTONVPN_PRIVATE_KEY}
+      - SERVER_COUNTRIES=${PROTONVPN_COUNTRY:-Netherlands}
+    volumes:
+      - ./gluetun:/gluetun
+
+  # ------------------------------------------------------------
+  # qBittorrent — torrent client
+  # Local:    http://localhost:8090
+  # Remote:   https://torrents.yourdomain.com
+  #
+  # Uses gluetun's network — all traffic goes through ProtonVPN.
+  # Web UI port is exposed on the gluetun container above.
+  # ------------------------------------------------------------
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    network_mode: "service:gluetun"   # All traffic via ProtonVPN — kill switch active
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+      - WEBUI_PORT=8090
+    volumes:
+      - ./qbittorrent/config:/config
+      - ${MEDIA_PATH}/downloads:/downloads

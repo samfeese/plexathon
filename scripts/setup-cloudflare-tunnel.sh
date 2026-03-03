@@ -135,6 +135,9 @@ ingress:
   - hostname: home.${DOMAIN}
     service: http://homepage:3000
 
+  - hostname: torrents.${DOMAIN}
+    service: http://localhost:8090
+
   # Catch-all — must be last
   - service: http_status:404
 EOF
@@ -158,6 +161,7 @@ printf "  %-14s %-8s %-52s %-8s\n" "plex"        "CNAME" "${TUNNEL_ID}.cfargotun
 printf "  %-14s %-8s %-52s %-8s\n" "audiobooks"  "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
 printf "  %-14s %-8s %-52s %-8s\n" "files"       "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
 printf "  %-14s %-8s %-52s %-8s\n" "home"        "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
+printf "  %-14s %-8s %-52s %-8s\n" "torrents"    "CNAME" "${TUNNEL_ID}.cfargotunnel.com" "ON (orange)"
 echo ""
 echo "  Tip: 'Proxy status' must be ON (the cloud icon should be orange, not grey)."
 echo "  This is what enables SSL and Cloudflare's protection."
@@ -193,6 +197,7 @@ echo -e "  ${BOLD}Plex${RESET}             https://plex.${DOMAIN}"
 echo -e "  ${BOLD}Audiobookshelf${RESET}   https://audiobooks.${DOMAIN}"
 echo -e "  ${BOLD}FileBrowser${RESET}      https://files.${DOMAIN}"
 echo -e "  ${BOLD}Dashboard${RESET}        https://home.${DOMAIN}"
+echo -e "  ${BOLD}Torrents${RESET}         https://torrents.${DOMAIN}"
 echo ""
 echo "DNS propagation can take a few minutes. If it doesn't work immediately, wait 5 minutes and try again."
 echo ""

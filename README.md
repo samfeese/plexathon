@@ -14,6 +14,7 @@ Turns your Mac mini into a home media server that you can access from anywhere:
 | **Audiobookshelf** | Listen to audiobooks and podcasts |
 | **FileBrowser** | Browse and manage your media files from a browser |
 | **Homepage** | A simple dashboard with links to everything |
+| **qBittorrent** | Torrent client — all traffic routed through ProtonVPN |
 | **Cloudflare Tunnel** | Secure remote access — no router config needed |
 
 Your media files live on the Windows laptop and are shared over your home network. The Mac mini reads them and serves them up through Plex.
@@ -86,6 +87,7 @@ Everything runs automatically in the background. You don't need to do anything.
 | Audiobookshelf | https://audiobooks.yourdomain.com |
 | FileBrowser | https://files.yourdomain.com |
 | Dashboard | https://home.yourdomain.com |
+| qBittorrent | https://torrents.yourdomain.com |
 
 ---
 

@@ -18,6 +18,8 @@ Docker Containers:
   - Audiobookshelf (audiobooks) ← audiobooks.yourdomain.com
   - FileBrowser (file manager)  ← files.yourdomain.com
   - Homepage (dashboard)        ← home.yourdomain.com
+  - qBittorrent (via gluetun)   ← torrents.yourdomain.com
+  - Gluetun (ProtonVPN)         ← no direct access, network layer only
 ```
 
 ## Hardware Setup
@@ -55,6 +57,17 @@ Docker Containers:
    - Dashboard linking all services
    - Service status monitoring
    - Quick access to all apps
+
+6. **Gluetun** (no direct port — network container)
+   - ProtonVPN client using WireGuard protocol
+   - Built-in kill switch: if VPN drops, torrent traffic stops rather than leaking
+   - qBittorrent runs inside this container's network namespace via `network_mode: service:gluetun`
+
+7. **qBittorrent** (port 8090, published on gluetun)
+   - Torrent client with web UI
+   - All traffic routed through ProtonVPN automatically
+   - Downloads land in `${MEDIA_PATH}/downloads`
+   - Port published on gluetun container, not directly on qbittorrent
 
 ## Network Share Strategy
 

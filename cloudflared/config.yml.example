@@ -24,5 +24,9 @@ ingress:
   - hostname: home.yourdomain.com
     service: http://homepage:3000
 
+  - hostname: torrents.yourdomain.com
+    service: http://localhost:8090
+    # qBittorrent web UI is published on gluetun (network_mode: host-ish)
+
   # Required catch-all — must be last
   - service: http_status:404
