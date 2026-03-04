@@ -60,7 +60,11 @@ services:
     volumes:
       - ./audiobookshelf/config:/config
       - ./audiobookshelf/metadata:/metadata
+<<<<<<< Updated upstream
       - ${MEDIA_PATH}/audiobooks:/audiobooks:ro
+=======
+      - ${MEDIA_PATH}/eLibrary:/eLibrary:ro
+>>>>>>> Stashed changes
 
   # ------------------------------------------------------------
   # FileBrowser — web file manager
@@ -75,7 +79,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ${MEDIA_PATH}:/srv
+      - ${THREED_PATH}:/3D_Printing
       - ./filebrowser/database.db:/database.db
       - ./filebrowser/config.json:/.filebrowser.json
 
