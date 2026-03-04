@@ -78,9 +78,9 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - ${THREED_PATH}:/3D_Printing
-      - ./filebrowser/data:/database
-      - ./filebrowser/config:/config
+      # - ${THREED_PATH}:/3D_Printing
+      - ./filebrowser/data/filebrowser.db:/database/filebrowser.db
+      - ./filebrowser/config/settings.json:/config/settings.json
       - ${MEDIA_PATH}:/srv
 
   # ------------------------------------------------------------
