@@ -150,6 +150,7 @@ if [[ ! -f ./filebrowser/config/settings.json ]]; then
   "baseURL": "",
   "address": "",
   "log": "stdout",
+  "database": "/database/filebrowser.db",
   "root": "/srv"
 }
 EOF

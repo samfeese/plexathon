@@ -74,10 +74,14 @@ services:
     restart: unless-stopped
     ports:
       - "8080:80"
+    environment:
+      - PUID=1000
+      - PGID=1000
     volumes:
       - ${THREED_PATH}:/3D_Printing
       - ./filebrowser/data:/database
       - ./filebrowser/config:/config
+      - ${MEDIA_PATH}:/srv
 
   # ------------------------------------------------------------
   # Homepage — dashboard
