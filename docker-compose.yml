@@ -76,8 +76,8 @@ services:
       - "8080:80"
     volumes:
       - ${THREED_PATH}:/3D_Printing
-      - ./filebrowser/database.db:/database.db
-      - ./filebrowser/config.json:/.filebrowser.json
+      - ./filebrowser/database.db:/database/filebrowser.db
+      - ./filebrowser/config.json:/config/settings.json
 
   # ------------------------------------------------------------
   # Homepage — dashboard
@@ -92,6 +92,7 @@ services:
       - "3000:3000"
     environment:
       - HOMEPAGE_ALLOWED_HOSTS=home.${DOMAIN}
+      - HOMEPAGE_VAR_DOMAIN=${DOMAIN}
     volumes:
       - ./homepage:/app/config
       - /var/run/docker.sock:/var/run/docker.sock:ro

@@ -161,23 +161,23 @@ if [[ ! -f ./homepage/services.yaml ]]; then
   cat > ./homepage/services.yaml << 'EOF'
 - Media:
     - Jellyfin:
-        href: http://localhost:8096
+        href: https://jellyfin.{{HOMEPAGE_VAR_DOMAIN}}
         description: Movies & TV
         icon: jellyfin.png
     - Audiobookshelf:
-        href: http://localhost:13378
+        href: https://audiobooks.{{HOMEPAGE_VAR_DOMAIN}}
         description: Audiobooks & Podcasts
         icon: audiobookshelf.png
 
 - Downloads:
     - qBittorrent:
-        href: http://localhost:8090
+        href: https://torrents.{{HOMEPAGE_VAR_DOMAIN}}
         description: Torrents (via ProtonVPN)
         icon: qbittorrent.png
 
 - Tools:
     - FileBrowser:
-        href: http://localhost:8080
+        href: https://files.{{HOMEPAGE_VAR_DOMAIN}}
         description: Manage Files
         icon: filebrowser.png
 EOF
