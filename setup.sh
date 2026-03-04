@@ -133,7 +133,7 @@ header "Step 3 of 4 — Creating Service Configs"
 # ============================================================
 
 # Create media subdirectories on the drive if missing
-for dir in movies tv audiobooks podcasts downloads; do
+for dir in movies tv audiobooks downloads; do
   if [[ ! -d "$MEDIA_PATH/$dir" ]]; then
     mkdir -p "$MEDIA_PATH/$dir"
     info "Created folder: $MEDIA_PATH/$dir"

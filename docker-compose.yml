@@ -61,7 +61,6 @@ services:
       - ./audiobookshelf/config:/config
       - ./audiobookshelf/metadata:/metadata
       - ${MEDIA_PATH}/audiobooks:/audiobooks:ro
-      - ${MEDIA_PATH}/podcasts:/podcasts:ro
 
   # ------------------------------------------------------------
   # FileBrowser — web file manager
@@ -121,7 +120,7 @@ services:
       - VPN_SERVICE_PROVIDER=protonvpn
       - VPN_TYPE=wireguard
       - WIREGUARD_PRIVATE_KEY=${PROTONVPN_PRIVATE_KEY}
-      - SERVER_COUNTRIES=${PROTONVPN_COUNTRY:-Netherlands}
+      - SERVER_NAMES=${PROTONVPN_SERVER}
     volumes:
       - ./gluetun:/gluetun
 
