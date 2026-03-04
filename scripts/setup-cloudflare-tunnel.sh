@@ -135,7 +135,7 @@ ingress:
     service: http://homepage:3000
 
   - hostname: torrents.${DOMAIN}
-    service: http://localhost:8090
+    service: http://gluetun:8090
 
   # Catch-all — must be last
   - service: http_status:404
