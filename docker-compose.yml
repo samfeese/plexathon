@@ -128,6 +128,7 @@ services:
       - VPN_TYPE=wireguard
       - WIREGUARD_PRIVATE_KEY=${PROTONVPN_PRIVATE_KEY}
       - SERVER_NAMES=${PROTONVPN_SERVER}
+      - VPN_PORT_FORWARDING=on
     volumes:
       - ./gluetun:/gluetun
 
