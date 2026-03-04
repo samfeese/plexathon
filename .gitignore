@@ -14,7 +14,7 @@ jellyfin/config/*
 !jellyfin/config/.gitkeep
 jellyfin/cache/*
 !jellyfin/cache/.gitkeep
-filebrowser/database.db
+filebrowser/data/*
 homepage/logs/
 
 # macOS

@@ -141,21 +141,20 @@ for dir in movies tv eLibrary downloads; do
 done
 ok "Media folders ready"
 
-if [[ ! -f ./filebrowser/config.json ]]; then
-  cat > ./filebrowser/config.json << 'EOF'
+mkdir -p ./filebrowser/config ./filebrowser/data
+
+if [[ ! -f ./filebrowser/config/settings.json ]]; then
+  cat > ./filebrowser/config/settings.json << 'EOF'
 {
   "port": 80,
   "baseURL": "",
   "address": "",
   "log": "stdout",
-  "database": "/database.db",
   "root": "/srv"
 }
 EOF
   ok "FileBrowser config created"
 fi
-
-touch ./filebrowser/database.db
 
 if [[ ! -f ./homepage/services.yaml ]]; then
   cat > ./homepage/services.yaml << 'EOF'

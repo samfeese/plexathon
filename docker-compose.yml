@@ -76,8 +76,8 @@ services:
       - "8080:80"
     volumes:
       - ${THREED_PATH}:/3D_Printing
-      - ./filebrowser/database.db:/database/filebrowser.db
-      - ./filebrowser/config.json:/config/settings.json
+      - ./filebrowser/data:/database
+      - ./filebrowser/config:/config
 
   # ------------------------------------------------------------
   # Homepage — dashboard
